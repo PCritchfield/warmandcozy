@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 
-export default function Home({ videos }) {
+type HomeProps = {
+  videos: string[]; // Array of strings
+};
+
+export default function Home({ videos }: HomeProps) {
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
 
   const handleVideoEnd = () => {

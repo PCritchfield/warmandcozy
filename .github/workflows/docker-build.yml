@@ -2,7 +2,7 @@ name: Docker Build and Push
 
 on:
   workflow_run:
-    workflows: ["Node.js Tests"]  # Replace with the actual name of your Node.js testing workflow
+    workflows: ["nodejs.yml"]  # Replace with the actual name of your Node.js testing workflow
     types:
       - completed
 # on:

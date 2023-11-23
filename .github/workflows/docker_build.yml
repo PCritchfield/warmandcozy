@@ -1,0 +1,43 @@
+name: Docker Build and Push
+
+on:
+  workflow_run:
+    workflows: ["Node.js Tests"]  # Replace with the actual name of your Node.js testing workflow
+    types:
+      - completed
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
+    
+    - name: Set Docker Image Tag
+      id: set_tag
+      run: |
+        BRANCH_NAME=${GITHUB_REF#refs/heads/}
+        TAG=${BRANCH_NAME//refs\/pull\//pr-}
+        if [ "$BRANCH_NAME" == "master" ]; then
+          TAG="latest"
+        fi
+        echo "DOCKER_TAG=$TAG" >> $GITHUB_ENV
+
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v1
+      with:
+        username: ${{ secrets.DOCKER_HUB_USERNAME }}
+        password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        file: ./Dockerfile
+        push: true
+        tags: philjim/warmandcozy:${{ env.DOCKER_TAG }}

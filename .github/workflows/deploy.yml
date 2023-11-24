@@ -1,0 +1,39 @@
+name: Pulumi Deploy
+
+on:
+  push:
+    paths:
+      - 'pulumi/**'
+  pull_request:
+    paths:
+      - 'pulumi/**'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Pulumi
+      uses: pulumi/actions@v2
+      with:
+        command: up
+        stack-name: dev
+      env:
+        PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-region: your-aws-region
+        role-to-assume: arn:aws:iam::123456789012:role/GithubActionsRole
+        role-session-name: GitHubActions
+
+    - name: Clean up pulumi
+      uses: pulumi/actions@v2
+      with:
+        command: destroy
+        stack-name: dev
+      env:
+        PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}

@@ -3,8 +3,12 @@ name: Node.js Tests
 on:
   push:
     branches: [ '*' ]
+    paths-ignore:
+      - 'pulumi/**'
   pull_request:
     branches: [ master ]
+    paths-ignore:
+      - 'pulumi/**'
 
 jobs:
   build:

@@ -30,6 +30,7 @@ jobs:
       run: |
         BRANCH_NAME=${GITHUB_REF#refs/heads/}
         TAG=${BRANCH_NAME//refs\/pull\//pr-}
+        TAG=${TAG/\//-} # Replace slash with a dash
         if [ "$BRANCH_NAME" == "master" ]; then
           TAG="latest"
         fi

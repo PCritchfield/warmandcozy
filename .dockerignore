@@ -1,0 +1,32 @@
+# Node modules
+node_modules
+
+# Next.js build output
+.next
+out
+
+# Logs
+logs
+*.log
+
+# Dependency directories
+.bower_components
+.jspm
+
+# Editors and IDEs
+.idea
+.vscode
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Source control
+.git
+.gitignore
+
+# NPM files
+npm-debug.log
+package-lock.json

@@ -35,7 +35,7 @@ jobs:
         role-session-name: GitHubActions
 
     - name: Clean up pulumi
-      uses: pulumi/actions@v3
+      uses: pulumi/actions@v2
       with:
         command: destroy
         stack-name: dev

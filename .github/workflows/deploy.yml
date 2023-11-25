@@ -12,9 +12,9 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: pulumi
+    # defaults:
+    #   run:
+    #     working-directory: pulumi
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
@@ -24,6 +24,7 @@ jobs:
       with:
         command: up
         stack-name: PCritchfield/warmandcozy/dev
+        work-dir: pulumi
       env:
         PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
 
@@ -39,5 +40,6 @@ jobs:
       with:
         command: destroy
         stack-name: PCritchfield/warmandcozy/dev
+        work-dir: pulumi
       env:
         PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}

@@ -3,12 +3,20 @@ name: Node.js Tests
 on:
   push:
     branches: [ '*' ]
+    paths:
+      - 'app/**'
+      - '.github/workflows/nodejs.yml'
   pull_request:
     branches: [ master ]
+    paths:
+      - 'app/**'
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
 
     strategy:
       matrix:

@@ -33,17 +33,9 @@ jobs:
     - name: Set up Pulumi
       uses: pulumi/actions@v4
       with:
-        command: up
+        command: preview
         stack-name: PCritchfield/warmandcozy/dev
         work-dir: pulumi
       env:
         PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
 
-    - name: Clean up pulumi
-      uses: pulumi/actions@v4
-      with:
-        command: destroy
-        stack-name: PCritchfield/warmandcozy/dev
-        work-dir: pulumi
-      env:
-        PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}

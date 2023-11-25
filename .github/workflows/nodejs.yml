@@ -3,12 +3,12 @@ name: Node.js Tests
 on:
   push:
     branches: [ '*' ]
-    paths-ignore:
-      - 'pulumi/**'
+    paths:
+      - 'app/**'
   pull_request:
     branches: [ master ]
     paths-ignore:
-      - 'pulumi/**'
+      - 'app/**'
 
 jobs:
   build:
@@ -19,6 +19,8 @@ jobs:
         node-version: [21.x]
 
     steps:
+    - name: Change to Pulumi directory
+      run: cd app
     - uses: actions/checkout@v3
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v3

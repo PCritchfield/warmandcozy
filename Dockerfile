@@ -4,7 +4,7 @@ ARG ENV=production
 # Base image
 FROM node:21 AS base
 WORKDIR /app
-COPY package*.json ./
+COPY ./app/package*.json .
 RUN npm install
 
 # Development build
@@ -15,7 +15,7 @@ CMD ["npm", "run", "dev"]
 # Production build
 FROM base AS production
 ENV NODE_ENV=production
-COPY . .
+COPY ./app .
 RUN npm run build
 CMD ["npm", "start"]
 

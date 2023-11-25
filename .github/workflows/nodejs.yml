@@ -5,9 +5,10 @@ on:
     branches: [ '*' ]
     paths:
       - 'app/**'
+      - '.github/workflows/nodejs.yml'
   pull_request:
     branches: [ master ]
-    paths-ignore:
+    paths:
       - 'app/**'
 
 jobs:

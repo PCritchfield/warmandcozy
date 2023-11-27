@@ -1,4 +1,5 @@
 import * as aws from "@pulumi/aws";
+import { SecurityGroup } from "@pulumi/aws/ec2";
 import * as awsx from "@pulumi/awsx";
 
 // Set the names of your resources
@@ -13,58 +14,95 @@ const vpc = new awsx.ec2.Vpc(vpcName, {});
 const cluster = new aws.ecs.Cluster(clusterName, {
     
 });
+let secGroup = new aws.ec2.SecurityGroup(sgName, {
+    vpcId: vpc.vpcId,
+    ingress: [
+        { protocol: "tcp", fromPort: 80, toPort: 80, cidrBlocks: ["0.0.0.0/0"] },
+    ],
+});
 
-// Create a new Security Group with the given name.
-let secGroup = new aws.ec2.SecurityGroup(sgName, {});
+const alb = new aws.lb.LoadBalancer("app-lb", {
+    loadBalancerType: "application",
+    subnets: vpc.publicSubnetIds,
+    securityGroups: [secGroup.id],
+});
 
-
-const alb = new awsx.lb.ApplicationLoadBalancer(
-    "app-lb", { securityGroups: [ secGroup.id ] }
-);
-const listener = alb.createListener("app-listener", { port: 80, protocol: "HTTP" });
-listener.createTargetGroup("app-tg", {
-    port: 3000,
-    targetType: "ip",
-    healthCheck: {
-        enabled: true,
-        path: "/",
-        protocol: "HTTP",
-    },
-}).createListenerRule("app-rule", {
-    actions: [
+const ecsSecurityGroup = new aws.ec2.SecurityGroup("ecsSecurityGroup", {
+    vpcId: vpc.vpcId,
+    ingress: [
         {
-            type: "forward",
-            targetGroupArn: listener.defaultTargetGroup.arn,
+            protocol: "tcp",
+            fromPort: 3000, // The port your container is listening on
+            toPort: 3000,
+            securityGroups: [alb.securityGroups[0]], // Allow traffic from the ALB's security group
         },
     ],
-    conditions: [
+    egress: [
         {
-            field: "path-pattern",
-            values: "/*",
+            protocol: "-1", // Allow all outbound traffic
+            fromPort: 0,
+            toPort: 0,
+            cidrBlocks: ["0.0.0.0/0"],
         },
     ],
 });
 
-// // Define the task
-// const task = new awsx.ecs.FargateTaskDefinition("task", {
-//     containers: {
-//         app: {
-//             name: "warmandcozy",
-//             image: "philjim/warmandcozy:latest",
-//             memory: 128 /* minimal memory in MiB */,
-//             portMappings: [ { containerPort: 3000 } ],
-//         },
-//     },
-// });
+const targetGroup = new aws.lb.TargetGroup("app-tg", {
+    port: 3000,
+    protocol: "HTTP",
+    targetType: "ip",
+    vpcId: vpc.vpcId,
+});
 
-// // Define the service
-// const service = new awsx.ecs.FargateService("service", {
-//     cluster,
-//     taskDefinition: task.taskDefinition.arn,
-//     desiredCount: 1,
-// });
+const httpListener = new aws.lb.Listener("http-listener", {
+    loadBalancerArn: alb.arn,
+    port: 80,
+    defaultActions: [{
+        type: "forward",
+        targetGroupArn: targetGroup.arn,
+    }],
+});
 
-// const logGroup = new aws.cloudwatch.LogGroup("LogGroup");
+// Define the task definition
+const task = new awsx.ecs.FargateTaskDefinition("task", {
+    executionRole:{
+        skip: true
+    },
+    taskRole:{
+        skip: true
+    },
+    containers: {
+        app: {
+            name: "latest",
+            image: "philjim/warmandcozy:latest",
+            memory: 512,
+            portMappings: [{
+                containerPort: 3000,
+                name: "3000-tcp",
+                protocol: "HTTP"
+              }],
+        },
+    },
+});
 
-// // Outputs
-// export const url = listener.endpoint.hostname;
+// Define the service
+const service = new awsx.ecs.FargateService("service", {
+    cluster: cluster.arn,
+    taskDefinition: task.taskDefinition.arn,
+    desiredCount: 1,
+    networkConfiguration: {
+        subnets: vpc.publicSubnetIds,
+        securityGroups: [ecsSecurityGroup.id],
+        assignPublicIp: false
+    },
+    loadBalancers: [{
+        targetGroupArn: targetGroup.arn,
+        containerName: "app", // The name of the container in your task definition
+        containerPort: 3000,   // The port on which your container is listening
+    }],
+});
+
+const logGroup = new aws.cloudwatch.LogGroup("LogGroup");
+
+// Outputs
+export const url = alb.dnsName;
